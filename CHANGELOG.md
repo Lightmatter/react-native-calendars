@@ -210,7 +210,7 @@
 ### Fix
 - Day components - fix for 'disableTouchEvent' marking to disable interactions for all marking types.
 
-## [1.233.0] = 2020-1-19
+## [1.233.0] - 2020-1-19
 
 ### Added
 - Calendar - update when 'displayLoadingIndicator' changes (PR #939).
@@ -632,3 +632,22 @@
 
 ### Fix
 - Reverting: ExpandableCalendar - static header month update (version 1.1256.0).
+
+## [1.1259.0] - 2021-4-27
+
+### Changed
+- moment js as an optional dependency (PR #1446).
+
+### Added
+- CalendarList - 'animateScroll' prop to allow animation on ato list scroll (i.e. on arrow press).
+
+## [1.1260.0] - 2021-5-2
+
+### Added
+- CalendarHeader - individual day header style overrides (PR #1465).
+- ExpandableCalendar - 'openThreshold' and 'closeThreshold' props (PR #1476).
+- 'eslint-plugin-react-native' to dev-dependencies.
+
+### Changed
+- Update gradle version to 6.3 (PR #1479).
+- Moving inline styles to StyleSheet.

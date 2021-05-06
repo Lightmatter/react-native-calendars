@@ -7,7 +7,7 @@ import {CALENDAR_KNOB} from '../testIDs';
 
 import dateutils from '../dateutils';
 import {parseDate} from '../interface';
-import styleConstructor from './style';
+import styleConstructor, {HEADER_HEIGHT} from './style';
 import CalendarList from '../calendar-list';
 import Calendar from '../calendar';
 import asCalendarConsumer from './asCalendarConsumer';
@@ -25,8 +25,8 @@ const BOUNCINESS = 6;
 const CLOSED_HEIGHT = 120; // header + 1 week
 const WEEK_HEIGHT = 46;
 const KNOB_CONTAINER_HEIGHT = 20;
-const HEADER_HEIGHT = 68;
 const DAY_NAMES_PADDING = 24;
+const PAN_GESTURE_THRESHOLD = 30;
 
 /**
  * @description: Expandable calendar component
@@ -55,7 +55,11 @@ class ExpandableCalendar extends Component {
     /** whether to have shadow/elevation for the calendar */
     allowShadow: PropTypes.bool,
     /** whether to disable the week scroll in closed position */
-    disableWeekScroll: PropTypes.bool
+    disableWeekScroll: PropTypes.bool,
+    /** a threshold for opening the calendar with the pan gesture */
+    openThreshold: PropTypes.number,
+    /** a threshold for closing the calendar with the pan gesture */
+    closeThreshold: PropTypes.number
   };
 
   static defaultProps = {
@@ -64,7 +68,9 @@ class ExpandableCalendar extends Component {
     firstDay: 0,
     leftArrowImageSource: require('../calendar/img/previous.png'),
     rightArrowImageSource: require('../calendar/img/next.png'),
-    allowShadow: true
+    allowShadow: true,
+    openThreshold: PAN_GESTURE_THRESHOLD,
+    closeThreshold: PAN_GESTURE_THRESHOLD
   };
 
   static positions = POSITIONS;
@@ -206,6 +212,7 @@ class ExpandableCalendar extends Component {
     return days.length / 7;
   }
 
+  // TODO: this logic repeat itself in WeekCalendar - consider moving to a presenter
   getMarkedDates() {
     const {context, markedDates} = this.props;
 
@@ -282,8 +289,10 @@ class ExpandableCalendar extends Component {
 
   bounceToPosition(toValue) {
     if (!this.props.disablePan) {
-      const {deltaY} = this.state;
-      const threshold = this.openHeight / 1.75;
+      const {deltaY, position} = this.state;
+      const {openThreshold, closeThreshold} = this.props;
+      const threshold =
+        position === POSITIONS.OPEN ? this.openHeight - closeThreshold : this.closedHeight + openThreshold;
 
       let isOpen = this._height >= threshold;
       const newValue = isOpen ? this.openHeight : this.closedHeight;
@@ -430,26 +439,21 @@ class ExpandableCalendar extends Component {
 
   renderWeekCalendar() {
     const {position} = this.state;
-    const {disableWeekScroll} = this.props;
+    const {disableWeekScroll, markedDates: propsMarkedDates} = this.props;
     const WeekComponent = disableWeekScroll ? Week : WeekCalendar;
+    const markedDates = disableWeekScroll ? this.getMarkedDates() : propsMarkedDates;
 
     return (
       <Animated.View
         ref={e => (this.weekCalendar = e)}
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: HEADER_HEIGHT + (commons.isAndroid ? 8 : 4), // align row on top of calendar's first row
-          opacity: position === POSITIONS.OPEN ? 0 : 1
-        }}
+        style={[this.style.weekContainer, position === POSITIONS.OPEN ? this.style.hidden : this.style.visible]}
         pointerEvents={position === POSITIONS.CLOSED ? 'auto' : 'none'}
       >
         <WeekComponent
           {...this.props}
           current={this.props.context.date}
           onDayPress={this.onDayPress}
-          markedDates={this.getMarkedDates()} // for Week component
+          markedDates={markedDates} // for Week component
           style={this.props.calendarStyle}
           allowShadow={false}
           hideDayNames={true}

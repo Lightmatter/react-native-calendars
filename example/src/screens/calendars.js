@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import moment from 'moment';
+import XDate from 'xdate';
 import React, {useState, Fragment} from 'react';
 import {StyleSheet, View, ScrollView, Text, TouchableOpacity, Switch} from 'react-native';
 import {Calendar} from 'react-native-calendars';
@@ -9,7 +9,6 @@ const testIDs = require('../testIDs');
 const CalendarsScreen = () => {
   const [selected, setSelected] = useState('');
   const [showMarkedDatesExamples, setShowMarkedDatesExamples] = useState(false);
-
 
   const toggleSwitch = () => {
     setShowMarkedDatesExamples(!showMarkedDatesExamples);
@@ -21,12 +20,12 @@ const CalendarsScreen = () => {
 
   const getDisabledDates = (startDate, endDate, daysToDisable) => {
     const disabledDates = {};
-    const start = moment(startDate);
-    const end = moment(endDate);
+    const start = XDate(startDate);
+    const end = XDate(endDate);
 
-    for (let m = moment(start); m.diff(end, 'days') <= 0; m.add(1, 'days')) {
+    for (let m = XDate(start); m.diffDays(end) <= 0; m.addDays(1)) {
       if (_.includes(daysToDisable, m.weekday())) {
-        disabledDates[m.format('YYYY-MM-DD')] = {disabled: true};
+        disabledDates[m.toString('YYYY-MM-DD')] = {disabled: true};
       }
     }
     return disabledDates;
@@ -356,16 +355,12 @@ const CalendarsScreen = () => {
         <Calendar
           style={[
             styles.calendar,
-            {
-              height: 250,
-              borderBottomWidth: 1,
-              borderBottomColor: 'lightgrey'
-            }
+            styles.customCalendar
           ]}
           dayComponent={({date, state}) => {
             return (
               <View>
-                <Text style={{textAlign: 'center', color: state === 'disabled' ? 'gray' : 'purple'}}>{date.day}</Text>
+                <Text style={[styles.customDay, state === 'disabled' ? styles.disabledText : styles.defaultText]}>{date.day}</Text>
               </View>
             );
           }}
@@ -380,13 +375,7 @@ const CalendarsScreen = () => {
         <View
           ref={ref}
           {...props}
-          style={{
-            backgroundColor: '#FCC',
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-            marginHorizontal: -4,
-            padding: 8
-          }}
+          style={styles.customHeader}
         >
           <Text>This is a custom header!</Text>
           <TouchableOpacity onPress={() => console.warn('Tapped!')}>
@@ -403,11 +392,7 @@ const CalendarsScreen = () => {
           testID={testIDs.calendars.LAST}
           style={[
             styles.calendar,
-            {
-              height: 250,
-              borderBottomWidth: 1,
-              borderBottomColor: 'lightgrey'
-            }
+            styles.customCalendar
           ]}
           customHeader={CustomHeader}
         />
@@ -440,15 +425,16 @@ const CalendarsScreen = () => {
     );
   };
 
-  const renderSwitch = () => { // Workaround for Detox 18 migration bug
+  const renderSwitch = () => {
+    // Workaround for Detox 18 migration bug
     return (
-      <View style={{flexDirection: 'row', margin: 10, alignItems: 'center'}}>
+      <View style={styles.switchContainer}>
         <Switch
           trackColor={{false: '#d9e1e8', true: '#00BBF2'}}
           onValueChange={toggleSwitch}
           value={showMarkedDatesExamples}
         />
-        <Text style={{margin: 10, fontSize: 16}}>Show markings examples</Text>
+        <Text style={styles.switchText}>Show markings examples</Text>
       </View>
     );
   };
@@ -474,10 +460,40 @@ const styles = StyleSheet.create({
   calendar: {
     marginBottom: 10
   },
+  switchContainer: {
+    flexDirection: 'row', 
+    margin: 10, 
+    alignItems: 'center'
+  },
+  switchText: {
+    margin: 10, 
+    fontSize: 16
+  },
   text: {
     textAlign: 'center',
     padding: 10,
     backgroundColor: 'lightgrey',
     fontSize: 16
+  },
+  disabledText: {
+    color: 'grey'
+  },
+  defaultText: {
+    color: 'purple'
+  },
+  customCalendar: {
+    height: 250,
+    borderBottomWidth: 1,
+    borderBottomColor: 'lightgrey'
+  },
+  customDay: {
+    textAlign: 'center'
+  },
+  customHeader: {
+    backgroundColor: '#FCC',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginHorizontal: -4,
+    padding: 8
   }
 });

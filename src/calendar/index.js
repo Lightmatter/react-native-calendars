@@ -96,11 +96,7 @@ class Calendar extends Component {
       return;
     }
 
-    this.setState(
-      {
-        currentMonth: day.clone()
-      },
-      () => {
+    this.setState({currentMonth: day.clone()}, () => {
         if (!doNotTriggerListeners) {
           const currMont = this.state.currentMonth.clone();
           _.invoke(this.props, 'onMonthChange', xdateToData(currMont));
